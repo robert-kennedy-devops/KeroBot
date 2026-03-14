@@ -10,8 +10,8 @@ KeroBot é um **cliente de usuário do Telegram** (MTProto) pronto para produç�
 - Cliente MTProto (não usa bot token)
 - Detecção de botões inline com matching inteligente
 - Gerenciador de estado global + engine baseada em eventos
-- Fila de ações com anti-flood + retry
-- Workers concorrentes (caça, combate, cura, poções, masmorra)
+- Fila de ações com anti-flood + retry + prioridade
+- Workers concorrentes com fallback (modo híbrido)
 - Persistência em PostgreSQL + migrations
 - Bot de configuração para onboarding e ajustes por usuário
 - Login via QR por sessão de usuário
@@ -107,9 +107,9 @@ Comandos principais:
 ## Como funciona
 1. O cliente MTProto conecta e escuta o bot alvo.
 2. Mensagens são parseadas para estados do jogo.
-3. A engine decide ações.
-4. Workers reforçam as ações em intervalos.
-5. Ações vão para uma fila com delay, retry e anti-flood.
+3. A engine decide ações com base em eventos e regras aprendidas.
+4. Workers atuam como fallback para estabilidade.
+5. Ações vão para uma fila com delay, retry, anti-flood e prioridade.
 
 ## Métricas
 Endpoint JSON em `METRICS_ADDR`:
