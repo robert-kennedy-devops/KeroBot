@@ -4,7 +4,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-KeroBot é um **cliente de usuário do Telegram** (MTProto) pronto para produção que automatiza ações de jogo no **Teletofusbot**. Ele usa `gotd/td`, PostgreSQL, logs estruturados e arquitetura modular com engine baseada em eventos.
+KeroBot é um **cliente de usuário do Telegram** (MTProto) pronto para produção que automatiza ações de jogo no estilo RPG Dofus. Ele usa `gotd/td`, PostgreSQL, logs estruturados e arquitetura modular com engine baseada em eventos.
 
 ## Recursos
 - Cliente MTProto (não usa bot token)
@@ -67,7 +67,7 @@ docker compose up --build
 ```
 TG_PASSWORD=
 TG_SESSION=./data/telegram.session
-TARGET_BOT=Teletofusbot
+TARGET_BOT=bot_alvo
 
 DB_HOST=postgres
 DB_PORT=5432
@@ -105,7 +105,7 @@ Comandos principais:
 - `/learn_last_text <texto>` cria regra com base no último texto
 
 ## Como funciona
-1. O cliente MTProto conecta e escuta o Teletofusbot.
+1. O cliente MTProto conecta e escuta o bot alvo.
 2. Mensagens são parseadas para estados do jogo.
 3. A engine decide ações.
 4. Workers reforçam as ações em intervalos.
