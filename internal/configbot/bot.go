@@ -69,6 +69,9 @@ func (b *Bot) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
 	_ = EnsureConfig(ctx, b.repo, msg.Chat.ID)
 
 	if msg.Text == "/start" || msg.Text == "/config" {
+		if msg.Text == "/start" {
+			b.sendIntro(msg.Chat.ID)
+		}
 		b.sendMenu(ctx, msg.Chat.ID)
 		return
 	}
@@ -349,6 +352,21 @@ func (b *Bot) sendMenu(ctx context.Context, chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ReplyMarkup = keyboard
 	_, _ = b.api.Send(msg)
+}
+
+func (b *Bot) sendIntro(chatID int64) {
+	text := "Bem-vindo ao KeroBot.\n\n" +
+		"Como obter API_ID e API_HASH:\n" +
+		"1) Acesse https://my.telegram.org\n" +
+		"2) Faça login com seu número\n" +
+		"3) Vá em API development tools\n" +
+		"4) Crie um app e copie API_ID e API_HASH\n\n" +
+		"Sequência recomendada:\n" +
+		"1) /set_api <id>\n" +
+		"2) /set_hash <hash>\n" +
+		"3) /qr (escaneie no Telegram)\n" +
+		"4) /config para ajustar automações\n"
+	b.reply(chatID, text)
 }
 
 func (b *Bot) sendAppConfig(ctx context.Context, chatID int64) {

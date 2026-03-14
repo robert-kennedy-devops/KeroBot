@@ -32,6 +32,7 @@ func main() {
 	log := logger.New(parseLogLevel(cfg.LogLevel))
 	slog.SetDefault(log)
 	log.Info("starting KeroBot")
+	log.Info("config bot onboarding", slog.String("steps", "1) get API_ID/API_HASH at my.telegram.org -> API development tools; 2) /set_api <id>; 3) /set_hash <hash>; 4) /qr"))
 
 	db, err := database.ConnectWithRetry(ctx, cfg.DSN(), cfg.Database.ConnectAttempts, cfg.Database.ConnectBackoff)
 	if err != nil {
