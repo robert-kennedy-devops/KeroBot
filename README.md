@@ -4,22 +4,36 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-KeroBot é um **cliente de usuário do Telegram** (MTProto) pronto para produção que automatiza ações de jogo no estilo RPG Dofus. Ele usa `gotd/td`, PostgreSQL, logs estruturados e arquitetura modular com engine baseada em eventos.
+KeroBot é um **cliente de usuário do Telegram (MTProto)** que automatiza fluxos de jogo em estilo RPG. O foco do projeto é **arquitetura robusta, segurança operacional e automação confiável**, com logs estruturados, persistência em PostgreSQL e engine orientada a eventos.
 
-## Recursos
-- Cliente MTProto (não usa bot token)
+## Destaques para recrutamento
+- **Arquitetura modular** com separação clara entre parsing, engine e execução.
+- **Automação resiliente** com fila priorizada, retry e rate limit.
+- **Observabilidade** via logs estruturados e métricas.
+- **Onboarding seguro**: login por QR com reenvio automático quando o token expira.
+- **Customização por usuário**: bot de configuração + regras aprendidas.
+
+## Caso de uso (resumo)
+1. O cliente MTProto conecta ao Telegram e escuta o bot alvo.
+2. Mensagens são parseadas e convertidas em estados do jogo.
+3. A engine decide ações com base em regras e estado atual.
+4. Workers atuam como fallback para estabilidade e só enfileiram ações quando o botão está visível.
+5. Ações vão para uma fila com delay, retry, anti-flood e prioridade.
+
+## Principais recursos
+- Cliente MTProto (sem bot token)
 - Detecção de botões inline com matching inteligente
-- Gerenciador de estado global + engine baseada em eventos
-- Fila de ações com anti-flood + retry + prioridade
-- Workers concorrentes com fallback (modo híbrido)
+- Engine baseada em eventos + state manager
+- Fila de ações com anti-flood, retry e prioridade
+- Workers concorrentes context-aware
 - Persistência em PostgreSQL + migrations
-- Bot de configuração para onboarding e ajustes por usuário
-- Login via QR por sessão de usuário (reenvio automático se o token expirar)
-- Modo de captura + regras aprendidas para automação
+- Bot de configuração (onboarding e ajustes por usuário)
+- Login via QR por sessão (reenvio automático se expirar)
+- Modo de captura + regras aprendidas
 - Endpoint de métricas
 - Docker + Docker Compose
 
-## Arquitetura
+## Arquitetura (mapa rápido)
 - `internal/telegram`: cliente MTProto, listener, botões, auth
 - `internal/parser`: parser de mensagens e detecção de estado
 - `internal/engine`: state manager, action executor, automation engine
@@ -50,18 +64,16 @@ kerobot/
   README.md
 ```
 
-## Setup
+## Setup rápido
 1. Crie o `.env`:
 ```
 cp .env.example .env
 ```
-
-2. Suba o stack e configure as credenciais do app via bot.
-
-3. Execute:
+2. Suba o stack:
 ```
 docker compose up --build
 ```
+3. Configure API_ID/API_HASH via bot de configuração.
 
 ## .env (exemplo)
 ```
@@ -104,20 +116,21 @@ Comandos principais:
 - `/learn_last_click <label>` cria regra com base no último botão
 - `/learn_last_text <texto>` cria regra com base no último texto
 
-## Como funciona
-1. O cliente MTProto conecta e escuta o bot alvo.
-2. Mensagens são parseadas para estados do jogo.
-3. A engine decide ações com base em eventos e regras aprendidas.
-4. Workers atuam como fallback para estabilidade e só enfileiram ações quando o botão está visível.
-5. Ações vão para uma fila com delay, retry, anti-flood e prioridade.
-
 ## Métricas
 Endpoint JSON em `METRICS_ADDR`:
 - `/metrics` retorna contadores de ações e mensagens.
 
-## Observações
-- Configure `API_ID` e `API_HASH` pelo bot (`/set_api` e `/set_hash`).
-- O login é feito por QR (`/qr`).
+## Decisões técnicas (trade-offs)
+- **MTProto (cliente de usuário) vs Bot API**: permite interagir com bots como se fosse um usuário real, porém exige cuidado com autenticação e políticas do Telegram.
+- **Engine por eventos + workers de fallback**: melhora a resiliência, mas aumenta concorrência e exige estado consistente.
+- **Fila com prioridade e rate limit**: evita flood e banimento, ao custo de latência controlada.
+- **Parser heurístico**: simples e rápido, porém exige manutenção quando o texto do bot muda.
+- **Persistência em Postgres**: garante histórico e configurações por usuário, com custo operacional maior do que storage local.
+
+## Roadmap (próximos passos)
+- Dashboard simples para visualizar métricas e estado das contas.
+- Testes de integração para fluxo completo (parser + engine + executor).
+- Feature flags por usuário para ativar/desativar automações com segurança.
 
 ## Testes
 Execute todos os testes:
