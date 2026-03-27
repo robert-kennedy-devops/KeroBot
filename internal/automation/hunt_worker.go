@@ -52,6 +52,10 @@ func (w *AutoHuntWorker) Run(ctx context.Context) {
 				w.debug("skip hunt: disabled", "")
 				continue
 			}
+			if snap.EnergyMax > 0 && snap.Energy <= 0 {
+				w.debug("skip hunt: no energy", "")
+				continue
+			}
 			if !parser.HasButton(snap.Buttons, "Caçar") {
 				w.debug("skip hunt: no button", "Caçar")
 				continue

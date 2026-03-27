@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/gotd/td/tg"
 
@@ -19,6 +20,8 @@ type AutomationEngine struct {
 	cfgReader  ConfigReader
 	ruleReader RuleReader
 	telegramID int64
+	lastEnergyRefresh time.Time
+	energyRefreshCooldown time.Duration
 }
 
 type ConfigReader interface {
@@ -30,7 +33,10 @@ type RuleReader interface {
 }
 
 func NewAutomationEngine(log *slog.Logger, state *StateManager, executor *Executor, cfgReader ConfigReader, ruleReader RuleReader, telegramID int64) *AutomationEngine {
-	return &AutomationEngine{log: log, state: state, executor: executor, cfgReader: cfgReader, ruleReader: ruleReader, telegramID: telegramID}
+	return &AutomationEngine{
+		log: log, state: state, executor: executor, cfgReader: cfgReader, ruleReader: ruleReader, telegramID: telegramID,
+		energyRefreshCooldown: 1 * time.Minute,
+	}
 }
 
 func (e *AutomationEngine) HandleSnapshot(ctx context.Context, snapshot parser.Snapshot, targetPeer tg.InputPeerClass) {
@@ -55,13 +61,40 @@ func (e *AutomationEngine) HandleSnapshot(ctx context.Context, snapshot parser.S
 		}
 	case parser.StateMainMenu:
 		if allowHunt {
-			e.enqueue(Action{Type: ActionClick, Label: "Caçar", Peer: targetPeer, Reason: "main_menu"})
+			if snapshot.EnergyMax > 0 && snapshot.Energy <= 0 {
+				e.maybeRefreshEnergy(snapshot, targetPeer)
+			} else {
+				e.enqueue(Action{Type: ActionClick, Label: "Caçar", Peer: targetPeer, Reason: "main_menu"})
+			}
 		}
+	case parser.StateNoEnergy:
+		if parser.HasButton(snapshot.Buttons, "Menu") || parser.HasButton(snapshot.Buttons, "🏠 Menu") {
+			e.enqueue(Action{Type: ActionClick, Label: "Menu", Peer: targetPeer, Reason: "no_energy", Priority: 1})
+		}
+		e.maybeRefreshEnergy(snapshot, targetPeer)
 	case parser.StateVictory:
 		if allowHunt {
 			e.enqueue(Action{Type: ActionClick, Label: "Caçar de novo", Peer: targetPeer, Reason: "victory"})
 		}
 	}
+}
+
+func (e *AutomationEngine) maybeRefreshEnergy(snapshot parser.Snapshot, targetPeer tg.InputPeerClass) {
+	if snapshot.EnergyMax <= 0 || snapshot.Energy > 0 {
+		return
+	}
+	if time.Since(e.lastEnergyRefresh) < e.energyRefreshCooldown {
+		return
+	}
+	// Prefer the "Energia" button to refresh the screen.
+	if parser.HasButton(snapshot.Buttons, "Energia") || parser.HasButton(snapshot.Buttons, "⚡ Energia") {
+		e.lastEnergyRefresh = time.Now()
+		e.enqueue(Action{Type: ActionClick, Label: "Energia", Peer: targetPeer, Reason: "energy_refresh"})
+		return
+	}
+	// Fallback: force refresh with /start.
+	e.lastEnergyRefresh = time.Now()
+	e.enqueue(Action{Type: ActionSend, Text: "/start", Peer: targetPeer, Reason: "energy_refresh"})
 }
 
 func (e *AutomationEngine) enqueue(action Action) {

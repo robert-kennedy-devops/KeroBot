@@ -11,12 +11,15 @@ const (
 	StateDefeat    GameState = "DEFEAT"
 	StateInventory GameState = "INVENTORY"
 	StateDungeon   GameState = "DUNGEON"
+	StateNoEnergy  GameState = "NO_ENERGY"
 )
 
 type Snapshot struct {
-	State     GameState
-	HPPercent int
-	Potions   int
-	Buttons   []string
-	Text      string
+	State        GameState
+	HPPercent    int
+	Potions      int
+	Energy       int
+	EnergyMax    int
+	Buttons      []string
+	Text         string
 }

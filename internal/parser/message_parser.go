@@ -13,6 +13,8 @@ var (
 	potRegex        = regexp.MustCompile(`(?i)po[cç]ões?\s*:?\s*(\d+)`)
 	stockRegex      = regexp.MustCompile(`(?i)estoque\s*:?\s*(\d+)`)
 	potionItemRegex = regexp.MustCompile(`(?i)po[cç](?:a|ã)o de vida\s*(?:x|×|:)?\s*(\d+)`)
+	energyFracRegex = regexp.MustCompile(`(?i)energia\s*:?\s*(\d+)\s*/\s*(\d+)`)
+	noEnergyRegex   = regexp.MustCompile(`(?i)sem energia`)
 )
 
 func Parse(text string, buttons []string) Snapshot {
@@ -44,6 +46,10 @@ func Parse(text string, buttons []string) Snapshot {
 			snapshot.Potions = atoiSafe(match[1])
 		}
 	}
+	if em := energyFracRegex.FindStringSubmatch(lower); len(em) == 3 {
+		snapshot.Energy = atoiSafe(em[1])
+		snapshot.EnergyMax = atoiSafe(em[2])
+	}
 
 	switch {
 	case strings.Contains(lower, "derrota"):
@@ -52,6 +58,8 @@ func Parse(text string, buttons []string) Snapshot {
 		snapshot.State = StateVictory
 	case containsButton(buttons, "atacar"):
 		snapshot.State = StateCombat
+	case noEnergyRegex.MatchString(lower):
+		snapshot.State = StateNoEnergy
 	case strings.Contains(textutil.Normalize(lower), "inventario"):
 		snapshot.State = StateInventory
 	case strings.Contains(lower, "dungeon") ||

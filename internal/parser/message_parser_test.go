@@ -87,6 +87,8 @@ func TestParseHPAndPotions(t *testing.T) {
 		text      string
 		wantHP    int
 		wantPots  int
+		wantEnergy int
+		wantEnergyMax int
 	}{
 		{
 			name:     "hp_percent_simple",
@@ -117,6 +119,16 @@ func TestParseHPAndPotions(t *testing.T) {
 			text:     "Poção de Vida x12",
 			wantHP:   0,
 			wantPots: 12,
+			wantEnergy: 0,
+			wantEnergyMax: 0,
+		},
+		{
+			name:     "energy_fraction",
+			text:     "⚡ Energia: 3/20",
+			wantHP:   0,
+			wantPots: -1,
+			wantEnergy: 3,
+			wantEnergyMax: 20,
 		},
 	}
 
@@ -131,6 +143,18 @@ func TestParseHPAndPotions(t *testing.T) {
 			if got.Potions != tt.wantPots {
 				t.Fatalf("potions=%d want=%d", got.Potions, tt.wantPots)
 			}
+			if got.Energy != tt.wantEnergy || got.EnergyMax != tt.wantEnergyMax {
+				t.Fatalf("energy=%d/%d want=%d/%d", got.Energy, got.EnergyMax, tt.wantEnergy, tt.wantEnergyMax)
+			}
 		})
+	}
+}
+
+func TestParseNoEnergyState(t *testing.T) {
+	t.Parallel()
+
+	got := Parse("Sem energia para caçar.", []string{"⚡ Energia", "🏠 Menu"})
+	if got.State != StateNoEnergy {
+		t.Fatalf("state=%s want=%s", got.State, StateNoEnergy)
 	}
 }
