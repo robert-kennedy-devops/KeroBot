@@ -61,11 +61,15 @@ func (e *AutomationEngine) HandleSnapshot(ctx context.Context, snapshot parser.S
 		}
 	case parser.StateMainMenu:
 		if allowHunt {
-			if snapshot.EnergyMax > 0 && snapshot.Energy <= 0 {
-				e.maybeRefreshEnergy(snapshot, targetPeer)
-			} else {
-				e.enqueue(Action{Type: ActionClick, Label: "Caçar", Peer: targetPeer, Reason: "main_menu"})
+			if snapshot.EnergyMax > 0 {
+				if snapshot.Energy <= 0 {
+					e.maybeRefreshEnergy(snapshot, targetPeer)
+				}
+				if snapshot.Energy < snapshot.EnergyMax {
+					break
+				}
 			}
+			e.enqueue(Action{Type: ActionClick, Label: "Caçar", Peer: targetPeer, Reason: "main_menu"})
 		}
 	case parser.StateNoEnergy:
 		if parser.HasButton(snapshot.Buttons, "Menu") || parser.HasButton(snapshot.Buttons, "🏠 Menu") {

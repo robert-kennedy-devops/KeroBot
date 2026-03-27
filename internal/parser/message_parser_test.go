@@ -158,3 +158,12 @@ func TestParseNoEnergyState(t *testing.T) {
 		t.Fatalf("state=%s want=%s", got.State, StateNoEnergy)
 	}
 }
+
+func TestEnergyThresholdForHunt(t *testing.T) {
+	t.Parallel()
+
+	got := Parse("⚡ Energia: 19/20", []string{"⚔️ Caçar"})
+	if got.Energy != 19 || got.EnergyMax != 20 {
+		t.Fatalf("energy=%d/%d want=%d/%d", got.Energy, got.EnergyMax, 19, 20)
+	}
+}
